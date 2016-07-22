@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+#
+# Generates Shell Archives!
+#
+
+VERSION="1.0.0"
+AUTHOR="Jared Allard <jaredallard@outlook.com>"
+
+error() {
+  echo "E: $*"
+  exit 1
+}
+
+help() {
+  echo "Usage: sea OPTIONS FILE..."
+  echo ""
+  echo "  -o            output file"
+  echo ""
+  echo "Report bugs to: https://github.com/jaredallard/sea"
+  exit
+}
+
+# TODO: make a loop plus shift automator.
+if [[ $1 == "" ]]; then
+  help
+elif [[ -e $1 ]]; then
+  error "File supplied instead of option."
+fi
+
+if [[ $3 == "" ]]; then
+  error "No Files Supplied."
+fi
+
+OUTPUT=$2
+
+# Shift the arguments array.
+shift 2
+
+echo "out: ${OUTPUT}"
+cat src/header.sh > ${OUTPUT}
+for file in $*; do
+  echo embed: ${file}
+
+  if [[ ! -e ${file} ]]; then
+    error "${file} doesn't exist."
+  fi
+
+  echo "FILES[\"${file}\"]='$(gzip -c ${file} | openssl base64 | tr -d "\n")'" >> ${OUTPUT}
+done
+cat src/config.sh >> ${OUTPUT}
+cat src/footer.sh >> ${OUTPUT}
+
+echo "chmod +x ${OUTPUT}"
+chmod +x ${OUTPUT}
